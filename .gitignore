@@ -1,4 +1,5 @@
-# ignore data files
-comments.json
+# Ignore all JSON files
+*.json
 
-sarc_09_12.csv
+# Ignore all CSV files
+*.csv
