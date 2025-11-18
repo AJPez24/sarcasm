@@ -1,15 +1,18 @@
-# data exploration with politics subreddit
+# using pol comments exploration code w/ all comments
 
 import pandas as pd
 import json
+import ijson
 import matplotlib
 import matplotlib.pyplot as plt
 
+comments_dict = {}
 # load comments json, save as dictionary
-with open("data/comments-pol.json", "r") as f:
-    comments_dict = json.load(f)
+with open("data/comments.json", "r") as f:
+    for key, value in ijson.kvitems(f, ""):
+        comments_dict[key] = value
 
-# convert dictionary to csv df
+# convert dictionary to df
 comments_df = pd.DataFrame.from_dict(comments_dict, orient="index")
 comments_df.index.name = "comment_id"
 
@@ -18,14 +21,14 @@ print(comments_df.head())
 print(comments_df.info())
 
 # save new version
-comments_df.to_csv("data/comments-pol-clean.csv")
+comments_df.to_csv("data/comments-clean.csv")
 
 # load train csv
-train_raw = pd.read_csv("data/train-balanced-pol.csv", header=None, names=["raw"])
+train_raw = pd.read_csv("data/train-balanced.csv", header=None, names=["raw"])
 
-# parse each row into separate columns, skip rows w/ different format 
+# parse each row into separate columns, skip rows w/ different format
 # currently parentID|childID childID|label other_label
-# (parsing code from chat)
+# parsing code from chat
 def parse_row(row):
     parts = row.split()
 
@@ -39,7 +42,6 @@ def parse_row(row):
             "other_label": None
         })
     if "|" not in parts[0] or "|" not in parts[1]:
-        # malformed row
         return pd.Series({
             "context_id": None,
             "comment_id": None,
@@ -65,6 +67,7 @@ def parse_row(row):
         "label": int(label),
         "other_label": other_label
     })
+
 
 # apply parser
 train_df = train_raw["raw"].apply(parse_row)
