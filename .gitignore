@@ -1,4 +1,6 @@
 *.csv
 *.csv.*
 
+*.json
+*.json.*
 *.json.bz2
