@@ -1,27 +1,28 @@
+import tensorflow as tf
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense, Dropout
 
-import numpy as np
-import matplotlib.pylab as plt
-from tensorflow import keras
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Flatten
-from tensorflow.keras.layers import Conv2D, MaxPooling2D
-from tensorflow.keras.datasets import mnist
+emb_dim = X_train_emb.shape[1]      # dimension 768 from BERT
 
 model = Sequential([
-    Conv2D(filters=10, kernel_size=(3,3), strides=(1, 1), input_shape=[28,28,1], padding='valid'),
-    MaxPooling2D(pool_size=(2, 2), strides=2),
-    Flatten(),
-    Dense(10, activation="softmax")
+    Dense(128, activation="relu", input_shape=(emb_dim,)),
+    Dropout(0.3),
+    Dense(1, activation="sigmoid")  # binary output
 ])
 
 model.compile(
-    loss="sparse_categorical_crossentropy",
+    loss="binary_crossentropy",
     optimizer="adam",
     metrics=["accuracy"]
 )
 
 model.summary()
 
-
-
-
+history = model.fit(
+    X_train_emb,
+    y_train,
+    batch_size=32,
+    epochs=5,
+    validation_split=0.1,
+    verbose=1
+)
