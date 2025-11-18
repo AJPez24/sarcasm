@@ -9,7 +9,7 @@ emb_dim = X_train_emb.shape[1]    # dimension 768 from BERT
 
 # model structure
 model = Sequential([
-    Dense(512, activation="relu", input_shape=(emb_dim,)),
+    Dense(512, activation="relu", input_shape=(768,)),
     Dropout(0.2),
     Dense(128, activation="relu"),
     Dropout(0.2),
