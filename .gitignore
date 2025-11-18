@@ -1,1 +1,7 @@
 .venv/
+
+#Ignore all JSON fiels
+*.JSON
+
+#Ignore all CSV files
+*.csv
