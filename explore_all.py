@@ -1,9 +1,7 @@
 # using pol comments exploration code w/ all comments
 
 import pandas as pd
-import json
 import ijson
-import matplotlib
 import matplotlib.pyplot as plt
 
 comments_dict = {}
@@ -29,59 +27,57 @@ train_raw = pd.read_csv("data/train-balanced.csv", header=None, names=["raw"])
 # parse each row into separate columns, skip rows w/ different format
 # currently parentID|childID childID|label other_label
 # parsing code from chat
+
 def parse_row(row):
-    parts = row.split()
-
-    # check format looks right
+    # deletes leading & trailing whitespace characters
+    row = row.strip()
+    # split into the 3 sections
+    parts = row.split("|")
     if len(parts) != 3:
-        # malformed row
-        return pd.Series({
-            "context_id": None,
-            "comment_id": None,
-            "label": None,
-            "other_label": None
-        })
-    if "|" not in parts[0] or "|" not in parts[1]:
-        return pd.Series({
-            "context_id": None,
-            "comment_id": None,
-            "label": None,
-            "other_label": None
-        })
+        return None
 
-    # split context|comment
-    context_id, _ = parts[0].split("|")
+    context_str, response_str, label_str = parts
 
-    # split comment|label
-    comment_id, label = parts[1].split("|")
+    # split inside each section
+    context_ids = context_str.strip().split()
+    response_ids = response_str.strip().split()
+    labels = label_str.strip().split()
 
-    # other label
+    # convert label strings to ints
     try:
-        other_label = int(parts[2])
+        labels = list(map(int, labels))
     except ValueError:
-        other_label = None
+        return None
+
+    # check
+    if len(response_ids) != len(labels):
+        return None
 
     return pd.Series({
-        "context_id": context_id,
-        "comment_id": comment_id,
-        "label": int(label),
-        "other_label": other_label
+        "context_ids": context_ids,
+        "response_ids": response_ids,
+        "labels": labels
     })
 
 
 # apply parser
-train_df = train_raw["raw"].apply(parse_row)
+parsed = train_raw["raw"].apply(parse_row).dropna()
 
-# drop bad rows
-train_df = train_df.dropna(subset=["comment_id"])
+# currently a row w/ a list in each column
+# explode into multiple rows to get 1 item per row
+expanded = parsed.explode(["response_ids", "labels"])
+expanded = expanded.rename(columns={
+    "response_ids": "comment_id",
+    "labels": "label"
+})
 
 print("train df:")
-print(train_df.head())
-print(train_df.info())
+print(expanded.head())
+print(expanded.info())
 
 # merge data sets
 merged_df = comments_df.merge(
-    train_df, 
+    expanded, 
     left_index=True, 
     right_on="comment_id", 
     how="inner"
