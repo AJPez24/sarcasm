@@ -1,10 +1,11 @@
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 
 #X_train_emb doesn't exit yet - these are the embeddings from BERT
 # need y train also - which is the train-balanced labels
-emb_dim = X_train_emb.shape[1]      # dimension 768 from BERT
+emb_dim = X_train_emb.shape[1]    # dimension 768 from BERT
 
 # model structure
 model = Sequential([
@@ -25,7 +26,7 @@ model.compile(
 model.summary()
 
 # fitting the model 
-history = model.fit(
+""" history = model.fit(
     X_train_emb,
     y_train,
     batch_size=32,
@@ -33,3 +34,9 @@ history = model.fit(
     validation_split=0.1,
     verbose=1
 )
+
+plt.plot(history.history["loss"], label="Train Loss")
+plt.plot(history.history["val_loss"], label="Val Loss")
+plt.legend()
+plt.show()
+ """
