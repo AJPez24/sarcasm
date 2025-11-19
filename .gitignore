@@ -1,7 +1,45 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore virtual env
 .venv/
+env/
+venv/
 
-#Ignore all JSON fiels
-*.JSON
+# Ignore OS clutter
+.DS_Store
+Thumbs.db
 
-#Ignore all CSV files
-*.csv
+# ------------ #
+# LARGE FILES  #
+# ------------ #
+
+# Big raw SARC files — DO NOT UPLOAD
+raw_comments.json
+comments.json
+train-balanced.csv
+train-unbalanced.csv
+train.csv
+test.csv
+*.jsonl
+
+# If your big comments live anywhere else, ignore them:
+**/comments.json
+**/train-balanced.csv
+**/train-unbalanced.csv
+
+# ---------------- #
+# KEEP THESE FILES #
+# ---------------- #
+
+# Explicitly KEEP the processed small files
+!small_comments_fixed.json
+!small_comments.csv
+!responses_flat.csv
+
+# Keep all Python
+!*.py
+
+# Do not ignore your notebooks
+!*.ipynb
