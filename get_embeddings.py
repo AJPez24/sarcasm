@@ -12,7 +12,7 @@ model.eval()
 df = pd.read_csv("./data/responses_flat.csv")
 
 ids = df["response_id"].tolist()
-responses = df["response_text"].tolist()
+responses = df["response_text"].astype(str).tolist()
 labels = df["label"].tolist()
 
 embeddings = []
