@@ -9,6 +9,6 @@ encoded_input = tokenizer(text, return_tensors='pt')
 
 output = model(**encoded_input)
 
-embeddings = output.last_hidden_state
+embeddings = output.pooler_output[0]
 
 print(embeddings.shape)
