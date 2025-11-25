@@ -1,1 +1,3 @@
-Testing git workflow
+get_embeddings.py runs each string in responses_flat through bert and puts the embeddings in the bert_embeddings.npz file.
+
+json_viewer is used for viewing the data and checking the format of the large json files.
