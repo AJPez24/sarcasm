@@ -8,10 +8,6 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 
-# Example: load your raw sentences and labels
-# sentences = ["This is sentence 1", "Another sentence", ...]
-# y = np.array([...])  # binary labels
-
 df = pd.read_csv("./data/responses_flat_train.csv")
 
 responses = df["response_text"].astype(str).tolist()
@@ -20,7 +16,7 @@ labels = df["label"].tolist()
 y = pd.read_csv("./data/train_sentences.csv")["label"].values
 
 # Tokenize text
-vocab_size = 5000  # or any number that suits your data
+vocab_size = 5000
 tokenizer = Tokenizer(num_words=vocab_size)
 tokenizer.fit_on_texts(responses)
 X_sequences = tokenizer.texts_to_matrix(responses, mode="binary")  # one-hot bag-of-words
@@ -58,7 +54,6 @@ history = model.fit(
     verbose=1
 )
 
-# plot loss
 plt.plot(history.history["loss"], label="Train Loss")
 plt.plot(history.history["val_loss"], label="Val Loss")
 plt.legend()
