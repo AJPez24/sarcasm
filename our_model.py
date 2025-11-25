@@ -1,5 +1,3 @@
-# from jackie 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -9,7 +7,7 @@ from tensorflow.keras.layers import Dense, Dropout
 from sklearn.model_selection import train_test_split
 
 # load embeddings
-data = np.load("./data/bert_embeddings.npz")
+data = np.load("./data/train_embeddings_pooler.npz")
 
 X = data["embeddings"]      # shape (N, 768)
 y = data["labels"]          # shape (N,)
@@ -25,9 +23,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 # model structure
 model = Sequential([
     Dense(512, activation="relu", input_shape=(768,)),
-    Dropout(0.2),
+    Dropout(0.1),
     Dense(128, activation="relu"),
     Dropout(0.2),
+    Dense(128, activation="relu"),
+    Dropout(0.1),
     Dense(1, activation="sigmoid")  # binary output
 ])
 
@@ -45,7 +45,7 @@ history = model.fit(
     X_train,
     y_train,
     batch_size=32,
-    epochs=5,
+    epochs=30,
     validation_split=0.1,
     verbose=1
 )

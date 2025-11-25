@@ -9,7 +9,7 @@ model = BertModel.from_pretrained("bert-base-uncased")
 
 model.eval()
 
-df = pd.read_csv("./data/responses_flat.csv")
+df = pd.read_csv("./data/responses_flat_test.csv")
 
 ids = df["response_id"].tolist()
 responses = df["response_text"].astype(str).tolist()
@@ -24,7 +24,10 @@ for response in tqdm(responses, desc="Embedding responses"):
     with torch.no_grad():
         output = model(**encoding)
 
-    current_embedding = output.pooler_output[0].numpy() #should also try "last_hidden_state"
+    #mean pooling
+    token_embeddings = output.last_hidden_state
+    current_embedding = token_embeddings.mean(dim=1).squeeze().numpy()
+
     embeddings.append(current_embedding)
 
 #convert to numpy arrays
@@ -36,6 +39,6 @@ print("Embeddings shape:", embeddings.shape)
 print("Labels shape:", labels.shape)
 
 #save in a new npz file
-np.savez("./data/bert_embeddings.npz", embeddings=embeddings, labels=labels, ids=ids)
+np.savez("./data/test_embeddings_mean.npz", embeddings=embeddings, labels=labels, ids=ids)
 
-print("Saved to bert_embeddings.npz")
+print("Saved to test_embeddings_mean.npz")
