@@ -16,6 +16,9 @@ model = Sequential([
     Dense(1, activation="sigmoid")  # binary output
 ])
 
+# try adding more layers ... larger neuron filtering for both layers?
+# change dropout to 0.5 maybe 
+
 # mocel compilation
 model.compile(
     loss="binary_crossentropy",
