@@ -1,5 +1,3 @@
-# from AJ
-
 import pandas as pd
 import torch
 from transformers import BertTokenizer, BertModel

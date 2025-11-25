@@ -1,8 +1,8 @@
-# Ignore all JSON files
-*.json
-
-# Ignore all CSV files
 *.csv
+*.csv.*
 
-# Ignore all NPZ files
+*.json
+*.json.*
+*.json.bz2
+
 *.npz
