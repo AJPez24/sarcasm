@@ -13,18 +13,19 @@ df = pd.read_csv("./data/responses_flat_train.csv")
 responses = df["response_text"].astype(str).tolist()
 labels = df["label"].tolist()
 
-y = pd.read_csv("./data/train_sentences.csv")["label"].values
-
 # Tokenize text
 vocab_size = 5000
 tokenizer = Tokenizer(num_words=vocab_size)
 tokenizer.fit_on_texts(responses)
-X_sequences = tokenizer.texts_to_matrix(responses, mode="binary")  # one-hot bag-of-words
+x = tokenizer.texts_to_matrix(responses, mode="binary")  # one-hot bag-of-words
 
-print("One-hot X shape:", X_sequences.shape)
+y = np.array(labels)
+
+print("One-hot X shape:", x.shape)
+print("One-hot Y shape:", y.shape)
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X_sequences, y, test_size=0.1, random_state=42, stratify=y
+    x, y, test_size=0.1, random_state=42, stratify=y
 )
 
 model = Sequential([
@@ -49,7 +50,7 @@ history = model.fit(
     X_train,
     y_train,
     batch_size=32,
-    epochs=30,
+    epochs=1,
     validation_split=0.1,
     verbose=1
 )
