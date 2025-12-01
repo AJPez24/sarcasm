@@ -9,7 +9,7 @@ model = BertModel.from_pretrained("bert-base-uncased")
 
 model.eval()
 
-df = pd.read_csv("./data/responses_flat_test.csv")
+df = pd.read_csv("./data/responses_flat_train.csv")
 
 ids = df["response_id"].tolist()
 responses = df["response_text"].astype(str).tolist()
@@ -39,6 +39,6 @@ print("Embeddings shape:", embeddings.shape)
 print("Labels shape:", labels.shape)
 
 #save in a new npz file
-np.savez("./data/test_embeddings_mean.npz", embeddings=embeddings, labels=labels, ids=ids)
+np.savez("./data/train_embeddings_mean.npz", embeddings=embeddings, labels=labels, ids=ids)
 
-print("Saved to test_embeddings_mean.npz")
+print("Saved to train_embeddings_mean.npz")

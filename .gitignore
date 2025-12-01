@@ -6,3 +6,5 @@
 *.json.bz2
 
 *.npz
+
+*.png

@@ -30,11 +30,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 model = Sequential([
     Dense(512, activation="relu", input_shape=(vocab_size,)),
-    Dropout(0.1),
+    # Dropout(0.1),
     Dense(128, activation="relu"),
-    Dropout(0.2),
+    # Dropout(0.2),
     Dense(128, activation="relu"),
-    Dropout(0.1),
+    # Dropout(0.1),
     Dense(1, activation="sigmoid")
 ])
 
