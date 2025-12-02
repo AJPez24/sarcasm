@@ -87,7 +87,7 @@
             (contained in the JSON file) and sarcasm labels (contained in the CSV file). We 
             started by reducing the JSON to contain only comments that matched IDs present in the CSV. We 
             then created a new CSV file with only the id, text, and sarcasm label.</p>
-        <p>(add simple visualizations of the data)</p>
+        <p>(add visualizations of the data - distribution, group by author & subreddit)</p>
         <p>We are using the Hugging Face transformers model BERT (Bidirection Encoder Representations 
             from Transformers) as a feature extractor. BERT is a pre-trained large language model 
             that uses masked language modeling (masking 15% of words in a sentence and trying 
@@ -95,7 +95,7 @@
             predicting if they were next to each other in the original text). We used BERT to create 
             embeddings to represent the labeled text data.</p>
 
-        <h2>Design</h2>
+        <h2>Initial Design</h2>
         <p>After preprocessing data, we used BERT as a feature extractor to represent the raw text 
             as token embeddings. We provided the text as input, and received a single 768-dimensional 
             vector as output to represent the full text. This results in a dataset with the shape N x 768,
@@ -105,7 +105,36 @@
             first two reduce the level of dimensions, compressing the features as the model learns, 
             and the third produces a binary output. Two dropout layers between reduce overfitting.</p>
         <img src="images/model-info.png" style="width: 100%">
-        <p>(talk about revisions to improve accuracy and reduce overfitting, analysis techniques)</p>
+
+        <p>analysis techniques: one hot model - tokenize text to create 5000-dimension vector for text 
+            - one-hot bag-of-words (each word assigned 0 or 1 based on whether it is present or not, 
+            w/ no info about context or word order),
+            feed into basic neural network, creates a baseline to compare our model to</p>
+
+        <h2>Revisions</h2>
+
+        <p>In order to improve the accuracy of our model and reduce overfitting, we applied several changes
+            to our initial model.
+        </p>
+        <p>(add images of initial model results)</p>
+        <p>We switched to mean pooling to get more accurate embeddings from BERT. Previously, we solely used
+            a classificiation token. Mean poooling allows us to get a vector for every token in the sentence, 
+            then take the average to produce a vector representing the sentence. This method creates 
+            better semantic similarity to fully represent the entire text.</p>
+        <p>In the model, we added another dense layer to create a more gradual compression, allowing the model to 
+            learn more features before classifying the text embedding. We also switched from a constant dropout 
+            to decreasing rates of dropout on the first three dense layers. We used a lower dropout rate toward the end 
+            because later layers are smaller and encode more specific information.</p>
+        <p>We switched the optimizer from adam to adamW (explain more about what this does)</p>
+        <p>We added two callbacks using Keras. The first, reducing learning rate on plateau, monitors validation loss, 
+            and decreases the learning rate if val loss does not improve for 2 epochs. The second, early stopping, 
+            also monitors val loss. If it does not improve for 4 epochs, the model stops training and uses weights 
+            from the epoch with the lowest validation loss.</p>
+        <p>Finally, we reduced the batch size and increased the number of epochs. The smaller batch size helps with
+             regularization and reduces overfitting, and a higher number of epochs balances out the smaller batch 
+             size. The inreased epochs allows the model to use them if needed, but it also uses early stopping when 
+            val loss stops improving.</p>
+        <img src="images/model-revised-info.png" style="width: 100%">
 
         <h2>Results</h2>
         <p>Outline the results and findings of the project, plots and figures to show the results - 
