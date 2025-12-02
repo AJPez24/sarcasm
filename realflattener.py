@@ -1,9 +1,9 @@
 import json
 import csv
 
-TRAIN_PATH = "data/train-balanced.csv"
-COMMENTS_PATH = "data/small_comments_fixed.json"   # <-- use the NEW file
-OUT_PATH = "responses_flat.csv"
+TRAIN_PATH = "data/test-balanced.csv"
+COMMENTS_PATH = "data/small_comments_fixed_test.json"   # <-- use the NEW file
+OUT_PATH = "responses_flat_test.csv"
 
 # 1) Load comments (single big dict)
 with open(COMMENTS_PATH, "r", encoding="utf-8") as f:

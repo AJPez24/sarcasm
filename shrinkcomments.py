@@ -2,7 +2,7 @@ import csv
 import ijson
 import json
 
-TRAIN_PATH = "data/train-balanced.csv"
+TRAIN_PATH = "data/test-balanced.csv"
 BIG_COMMENTS_PATH = "data/comments.json"        # <-- full 2.6GB file
 OUT_SMALL = "small_comments_fixed.json"    # <-- new fixed small file
 
@@ -31,7 +31,7 @@ with open(TRAIN_PATH, encoding="utf-8") as f:
         for rid in reply_ids:
             needed_ids.add(rid)
 
-print("Reply IDs needed from train-balanced:", len(needed_ids))
+print("Reply IDs needed from test-balanced:", len(needed_ids))
 
 # ------------------------------------------------------------
 # 2) Stream the BIG comments.json and keep only those IDs

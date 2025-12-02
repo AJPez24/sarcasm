@@ -24,6 +24,9 @@ train.csv
 test.csv
 *.jsonl
 
+# Ignore embedding files
+*.npz
+
 # If your big comments live anywhere else, ignore them:
 **/comments.json
 **/train-balanced.csv
