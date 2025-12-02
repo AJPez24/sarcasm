@@ -1,0 +1,11 @@
+import pandas as pd
+
+df = pd.read_csv("./data/responses_flat.csv")
+
+df["response_text"] = (
+    df["response_text"]
+    .str.lower()
+    .str.replace(r"[^\w\s',]", "", regex=True)
+)
+
+df.to_csv("./data/stripped_responses.csv", index=False)
