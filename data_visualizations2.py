@@ -1,10 +1,12 @@
+# data visualizations with new flattened data set
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
 df = pd.read_csv("data/responses_flat_more_columns.csv")
 
 # plot - how many sarcastic vs non-sarcastic
-# equal because balanced dataset
+# (equal because balanced dataset)
 label_counts = df['label'].value_counts().sort_index()
 
 plt.figure(figsize=(6,4))
@@ -14,6 +16,35 @@ plt.xlabel("Label")
 plt.ylabel("Count")
 plt.title("Sarcasm Labels Count")
 plt.show()
+
+# Filter out authors called [deleted]
+df_filtered = df[df['author'] != '[deleted]']
+
+# Count sarcastic vs non-sarcastic comments per author
+author_counts = df_filtered.groupby(['author', 'label']).size().unstack(fill_value=0)
+
+# Filter to keep only authors with at least 5 comments
+author_counts['total'] = author_counts.sum(axis=1)
+author_counts = author_counts[author_counts['total'] >= 5]
+
+# Select top 10 authors by total comments
+top_authors = author_counts.nlargest(10, 'total')
+top_authors = top_authors.drop(columns='total')
+
+# Plot stacked bar chart
+ax = top_authors.plot(
+    kind='bar', 
+    stacked=True, 
+    figsize=(12,6), 
+    color=['#2b73cc','#f09b46']
+)
+
+plt.title("Top 10 Authors by Total Comments (Sarcastic vs Not Sarcastic)")
+plt.xlabel("Author")
+plt.ylabel("Number of Comments")
+plt.xticks(rotation=45, ha='right')
+plt.legend(['Not Sarcastic', 'Sarcastic'], title="Comment Type")
+plt.tight_layout()
 
 
 # top authors by % of 1s
@@ -47,8 +78,6 @@ plt.ylabel("Percentage of Comments that are Sarcastic")
 plt.ylim(0,1)
 plt.tight_layout()
 plt.show()
-
-
 
 # filter only rows with label == 1
 df_ones = df[df['label'] == 1]

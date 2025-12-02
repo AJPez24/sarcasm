@@ -1,4 +1,4 @@
-# data exploration with politics subreddit
+# data exploration with politics subreddit (smaller so loads faster)
 
 import pandas as pd
 import json

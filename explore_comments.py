@@ -1,5 +1,7 @@
 # DATA EXPLORATION
 
+# json parser from chatGPT
+
 # use ijson parser for large json file
 import ijson 
 from collections import Counter
@@ -38,3 +40,4 @@ print("Top 10 authors:", author_counts)
 # subreddits
 subreddit_counts = Counter(subreddits).most_common(10)
 print("Top 10 subreddits:", subreddit_counts)
+
