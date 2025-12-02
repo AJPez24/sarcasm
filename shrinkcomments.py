@@ -2,12 +2,14 @@ import csv
 import ijson
 import json
 
-TRAIN_PATH = "data/train-balanced.csv"
-BIG_COMMENTS_PATH = "data/comments.json"        # <-- full 2.6GB file
-OUT_SMALL = "small_comments_fixed.json"    # <-- new fixed small file
+TRAIN_PATH = "data/test-balanced.csv"
+BIG_COMMENTS_PATH = "data/comments.json"
+OUT_SMALL = "test_small_comments_fixed.json"
 
 # ------------------------------------------------------------
-# 1) Collect ALL reply IDs from train-balanced
+# 1) Collect ALL IDs we need:
+#    - Main comment ID (left side of each line)
+#    - Both reply IDs (right side of each line)
 # ------------------------------------------------------------
 needed_ids = set()
 
@@ -19,25 +21,27 @@ with open(TRAIN_PATH, encoding="utf-8") as f:
         if "|" not in line:
             continue
 
-        # split on first pipe
-        left, right = line.split("|", 1)
+        # split top-level comment from reply block
+        main_comment_id, right = line.split("|", 1)
+        main_comment_id = main_comment_id.strip()
+
+        # ALWAYS keep the main comment ID
+        needed_ids.add(main_comment_id)
+
         if "|" not in right:
             continue
 
-        comment_ids = left.strip()
-
         replies_part, labels_part = right.split("|", 1)
 
-        # replies are space-separated
+        # replies are space separated
         reply_ids = replies_part.strip().split()
         for rid in reply_ids:
             needed_ids.add(rid)
 
-print("Reply IDs needed from train-balanced:", len(needed_ids))
+print("Total IDs needed:", len(needed_ids))
 
 # ------------------------------------------------------------
-# 2) Stream the BIG comments.json and keep only those IDs
-#    comments.json is a SINGLE BIG JSON OBJECT: {id: {...}, id2: {...}, ...}
+# 2) Stream the big JSON and extract only the IDs we need
 # ------------------------------------------------------------
 small_comments = {}
 
@@ -49,14 +53,14 @@ with open(BIG_COMMENTS_PATH, "rb") as f:
 print("Found in big comments:", len(small_comments))
 
 missing = needed_ids - small_comments.keys()
-print("Missing reply IDs:", len(missing))
+print("Missing IDs:", len(missing))
 if missing:
     print("Example missing IDs:", list(missing)[:20])
 
 # ------------------------------------------------------------
-# 3) Save the fixed small comments file
+# 3) Save the small JSON file
 # ------------------------------------------------------------
 with open(OUT_SMALL, "w", encoding="utf-8") as f:
     json.dump(small_comments, f)
 
-print("Wrote fixed small comments to", OUT_SMALL)
+print("Wrote:", OUT_SMALL)

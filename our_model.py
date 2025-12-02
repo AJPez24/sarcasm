@@ -59,7 +59,7 @@ callbacks = [
     ),
     tf.keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=4,
+        patience=10,
         restore_best_weights=True,
         verbose=1
     )
@@ -72,7 +72,7 @@ history = model.fit(
     x_train,
     y_train,
     batch_size=16,
-    epochs=20,          # let callbacks stop early
+    epochs=30,          # let callbacks stop early
     validation_split=0.1,
     callbacks=callbacks,
     verbose=1
