@@ -9,17 +9,23 @@ model = BertModel.from_pretrained("bert-base-uncased")
 
 model.eval()
 
-df = pd.read_csv("./data/responses_flat_train.csv")
+df = pd.read_csv("./data/new_responses_flat_train.csv")
 
-ids = df["response_id"].tolist()
+response_ids = df["response_id"].tolist()
 responses = df["response_text"].astype(str).tolist()
+
+comment_ids = df["main_comment_id"].tolist()
+comments = df["main_comment_text"].tolist()
+
 labels = df["label"].tolist()
 
 embeddings = []
 
 #Get the embedding for each response and add it to the embedding list
-for response in tqdm(responses, desc="Embedding responses"):
-    encoding = tokenizer(response, return_tensors='pt', truncation=True)
+for comment, response in tqdm(zip(comments, responses), desc="Embedding comment-response pairs", total=len(responses)):
+    text = (comment + " " + response)
+
+    encoding = tokenizer(text, return_tensors='pt', truncation=True)
 
     with torch.no_grad():
         output = model(**encoding)
@@ -39,6 +45,6 @@ print("Embeddings shape:", embeddings.shape)
 print("Labels shape:", labels.shape)
 
 #save in a new npz file
-np.savez("./data/train_embeddings_mean.npz", embeddings=embeddings, labels=labels, ids=ids)
+np.savez("./data/paired_train_embeddings_mean.npz", embeddings=embeddings, labels=labels, ids=ids)
 
-print("Saved to train_embeddings_mean.npz")
+print("Saved to paired_train_embeddings_mean.npz")
