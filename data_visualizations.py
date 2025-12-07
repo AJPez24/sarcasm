@@ -1,4 +1,4 @@
-# data visualizations
+# data visualizations - using comments json
 
 import matplotlib.pyplot as plt
 
@@ -24,7 +24,7 @@ with open(comments, "rb") as f:
 # authors
 author_counts = Counter(authors).most_common(10)
 
-# Filter out authors named "[deleted]" - bots
+# filter out authors named "[deleted]" - probably bots
 filtered_author_counts = [(a, c) for a, c in author_counts if a != "[deleted]"]
 
 authors_list = [a for a, c in filtered_author_counts]

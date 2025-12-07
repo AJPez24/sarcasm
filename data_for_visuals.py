@@ -1,3 +1,7 @@
+# making a new flat dataset with author and subreddit included
+
+# json parser from chatGPT
+
 import json
 import csv
 
