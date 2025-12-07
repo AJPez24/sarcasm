@@ -120,91 +120,222 @@
         </script>
 
         <h2>Background & Motivation</h2>
-        <p>Machine learning models notoriously struggle to understand and react appropriately to sarcastic statements.
-            Sarcasm often conveys a sentiment opposite to the actual meaning, and models mimic human language
-            without sentience. As a result, words that change meanings across different contexts, like “not,” are
-            extremely
-            difficult to interpret. </p>
+        
+        <p>Machine learning models notoriously struggle to understand and react appropriately to sarcastic statements. 
+            Sarcasm often conveys a sentiment opposite its literal meaning, and models mimic human language without 
+            sentience. As a result, words that change meanings across different contexts, such as the word “not,” are very 
+            challenging for models to interpret correctly. </p>
 
-        <p>Our goal is to increase AI’s semantic comprehension by creating a sarcasm detector
-            that can be used as a filter for sentiment analysis models, specifically for short content. Our project
-            explores the question: Can an artificial network effectively detect sarcasm in short text content based
-            on linguistic and contextual clues?</p>
+        <p>Our goal is to increase AI’s semantic comprehension by creating a sarcasm detector that can be used as a filter 
+            for sentiment analysis models, specifically for short content, like a phrase or sentence. Our project explores 
+            the question: Can an artificial network effectively detect sarcasm in short text content based on linguistic and 
+            contextual clues?</p>
 
         <h2>Data & Resources</h2>
-        <p>Our main data source is the Self-Annotated Reddit Corpus (SARC), organized into JSON and CSV files which are
-            publicly available
-            on Github. The JSON file includes 1.3 million sarcastic comments labeled by the authors,
-            with text and metadata for each comment. In addition to the text and id, the
-            metadata includes seven features: author, score, ups, downs, date, created utc,
-            subreddit. A separate CSV file contains train and test data showing context and sarcasm labels.
-            It includes a sequence of comments following a post and a set of responses to the last comment
-            in that sequence (all labeled by id number).</p>
-        <p>We preprocessed the data to create a new flattened data frame combining the text
-            (contained in the JSON file) and sarcasm labels (contained in the CSV file). We
-            started by reducing the JSON to contain only comments that matched IDs present in the CSV. We
-            then created a new CSV file with only the id, text, and sarcasm label.</p>
-        <p>(add visualizations of the data - distribution, group by author & subreddit)</p>
-        <p>We are using the Hugging Face transformers model BERT (Bidirection Encoder Representations
-            from Transformers) as a feature extractor. BERT is a pre-trained large language model
-            that uses masked language modeling (masking 15% of words in a sentence and trying
-            to predict them) and next sentence prediction (concatenating two random sentences and
-            predicting if they were next to each other in the original text). We used BERT to create
-            embeddings to represent the labeled text data.</p>
+        
+        <p>Our main data source is the Self-Annotated Reddit Corpus (SARC), organized into JSON and CSV files, which are 
+            publicly available on GitHub. The JSON file includes 1.3 million sarcastic comments labeled by the authors, with 
+            text and metadata for each comment. In addition to the text and id, the metadata includes seven features: 
+            author, score, ups, downs, date, created UTC, and subreddit. A separate CSV file contains balanced train and 
+            test data showing context and sarcasm labels (one sarcastic and one non sarcastic reply for every entry). It 
+            includes a sequence of comments following a post and a set of responses to the last comment in that sequence 
+            (all labeled by id number).</p>
+        
+        <p>We preprocessed the data to create a new flattened data frame combining the text (contained in the JSON file) and 
+            sarcasm labels (contained in the CSV file). We started by reducing the JSON to contain only responses that 
+            matched IDs present in the CSV. We then created a new CSV file with only the ID, text, and sarcasm label. </p>
+        
+        <p>(images)</p>
+        
+        <p>We are using the Hugging Face transformers model BERT (Bidirectional Encoder Representations from Transformers) 
+            as a feature extractor. BERT is a pre-trained large language model that uses masked language modeling (masking 
+            15% of words in a sentence and trying to predict them) and next sentence prediction (concatenating two random 
+            sentences and predicting if they were next to each other in the original text). We used BERT to create 
+            embeddings to represent the labeled text data, which are numerical vectors that help convey contextual 
+            information.</p>
 
-        <h2>Initial Design</h2>
-        <p>After preprocessing data, we used BERT as a feature extractor to represent the raw text
-            as token embeddings. We provided the text as input, and received a single 768-dimensional
-            vector as output to represent the full text. This results in a dataset with the shape N x 768,
-            where each row is a fixed-length embedding.</p>
-        <p>The embeddings serve as input in our classification model, which uses a fully-connected
-            feed-forward neural network. Our initial model structure uses three dense layers; the
-            first two reduce the level of dimensions, compressing the features as the model learns,
-            and the third produces a binary output. Two dropout layers between reduce overfitting.</p>
-        <img src="images/model-info.png" style="width: 100%">
+        <h2>Project Design</h2>
+        
+        <p>After preprocessing data, we used BERT as a feature extractor to represent the raw text as embeddings with 
+            labels. We provided the reply text as input to BERT, and received a single 768-dimensional vector as output to 
+            represent the full text. This results in a dataset with the shape N x 768, where each row is a fixed-length 
+            embedding. The embeddings serve as input in our classification model, which uses a fully-connected feed-forward 
+            neural network. The final layer classifies the embedding as a value between 0 and 1, representing a probability 
+            of how likely the comment is to be sarcastic.</p>
+        
+        <p>(image)</p>
 
-        <p>analysis techniques: one hot model - tokenize text to create 5000-dimension vector for text
-            - one-hot bag-of-words (each word assigned 0 or 1 based on whether it is present or not,
-            w/ no info about context or word order),
-            feed into basic neural network, creates a baseline to compare our model to</p>
+        <h2>Initial Model</h2>
+
+        <p>Our initial model structure used three dense layers of 512 and 128 neurons for the first two layers, and 1 for 
+            the final layer. The first two layers reduce the dimensionality, compressing the features as the model learns, 
+            and the third produces a binary output. Two dropout layers in between reduce overfitting. We use the binary 
+            cross-entropy loss function to measure the difference between the actual and predicted labels of 0 and 1, 
+            non-sarcastic and sarcastic. Our initial model produced the following results over 30 epochs:</p>
+
+        <p>Train accuracy: 0.6293, Train loss: 0.6466</p>
+
+        <p>Validation accuracy: 0.6269, Validation Loss: 0.6444</p>
+
+        <p>Because the validation and training loss drop together, we know that the model is learning patterns of the data 
+            with no major overfitting. Based on the confusion matrix, however, we can see that there is a relatively high 
+            number of false negative and false positive predictions, meaning the model is predicting sarcastic comments as 
+            non-sarcastic, and non-sarcastic comments as sarcastic. The confusion matrix also used a threshold of 0.5 for 
+            the predicted probability of sarcastic or not sarcastic, as this was the standard threshold value. </p>
+
+        <p>Additionally, the histogram shows that the model is not very confident in its predictions, as the distribution 
+            of predicted probabilities is most heavily concentrated around values between 0.4-0.55. There is a spike at 
+            0.7, but because the model is not outputting values at 0 or 1 often, we know that it does not strongly believe 
+            that the inputs are clearly sarcastic or non-sarcastic. </p>
+
+        <p>Based on these findings, moving forward, we wanted to improve our accuracy, reduce the number of false negatives 
+            and false positives, and increase model confidence in predicting whether short content is sarcastic or not.</p>
+
+        <p>(images)</p>
+
+        <h2>Baseline Model</h2>
+
+        <p>We created a one-hot encoding model to serve as a baseline measurement. In other words, instead of using BERT, 
+            we tokenized the text to create a 5000-dimensional “bag-of-words” vector to represent the text. This 
+            representation assigns each word a 0 or 1 in the vector based on whether or not it is present, meaning it does 
+            not include information about context or word order. The baseline model was implemented using the same 
+            parameters as our final model, so that the only thing changed was that the baseline uses one-hot encoding, 
+            while the final model uses BERT embeddings. Our baseline model produced the following results after 2 epochs 
+            (early-stopping):</p>
+
+        <p>Train Accuracy: 0.7033, Train loss: 0.5849</p>
+
+        <p>Validation Accuracy: 0.6721, Validation Loss: 0.6141</p>
+
+        <p>(images)</p>
+
+        <p>The loss graph shows us that the model is severely overfitting, as the training loss is significantly lower than 
+            the validation loss. The model early stopped at epoch 11 but reset to the best epoch, 2, although this epoch 
+            was not very good either.</p>
+
+        <p>Based on the histogram, most of the model’s predictions fall between 0.3 and 0.6, indicating the model is not 
+            very confident in its predictions. There are more predictions close to 1 than in the initial model; however, 
+            the model is still very unsure about its predictions of sarcasm versus non-sarcasm. The confusion matrix tells 
+            us that the model is not good at predicting sarcasm, as the number of true negatives and false negatives is 
+            highest; however, there are fewer true positives. </p>
 
         <h2>Revisions</h2>
 
-        <p>In order to improve the accuracy of our model and reduce overfitting, we applied several changes
-            to our initial model.
-        </p>
-        <p>(add images of initial model results)</p>
-        <p>We switched to mean pooling to get more accurate embeddings from BERT. Previously, we solely used
-            a classification token. Mean pooling allows us to get a vector for every token in the sentence,
-            then take the average to produce a vector representing the sentence. This method creates
-            better semantic similarity to fully represent the entire text.</p>
-        <p>In the model, we added another dense layer to create a more gradual compression, allowing the model to
-            learn more features before classifying the text embedding. We also switched from a constant dropout
-            to decreasing rates of dropout on the first three dense layers. We used a lower dropout rate toward the end
-            because later layers are smaller and encode more specific information.</p>
-        <p>We switched the optimizer from adam to adamW (explain more about what this does)</p>
-        <p>We added two callbacks using Keras. The first, reducing learning rate on plateau, monitors validation loss,
-            and decreases the learning rate if val loss does not improve for 2 epochs. The second, early stopping,
-            also monitors val loss. If it does not improve for 4 epochs, the model stops training and uses weights
-            from the epoch with the lowest validation loss.</p>
-        <p>Finally, we reduced the batch size and increased the number of epochs. The smaller batch size helps with
-            regularization and reduces overfitting, and a higher number of epochs balances out the smaller batch
-            size. The inreased epochs allows the model to use them if needed, but it also uses early stopping when
-            val loss stops improving.</p>
-        <img src="images/model-revised-info.png" style="width: 100%">
+        <p>In order to improve the accuracy of our model and reduce overfitting, we applied several changes to our initial 
+            model.</p>
+        
+        <p>We switched to mean pooling to get more accurate embeddings from BERT. Previously, we solely used a 
+            classification token. Mean pooling allows us to get a vector for every token in the sentence, then take the 
+            average to produce a vector representing the sentence. This method creates better semantic similarity to fully 
+            represent the entire text.</p>
 
+        <p>In the model, we added another dense layer to create a more gradual compression, allowing the model to learn 
+            more features before classifying the text embedding. We also switched from a constant dropout to decreasing 
+            rates of dropout on the first three dense layers. We used a lower dropout rate toward the end because later 
+            layers are smaller and encode more specific information.</p>
+
+        <p>We switched the optimizer from adam to adamW to further improve performance. Adam calculates weight decay 
+            together with the gradient update, while AdamW separates the two steps. AdamW provides more stable optimization 
+            by calculating weight gradients, then moving on to regularization steps.</p>
+
+        <p>We added two callbacks using Keras. The first, reducing the learning rate on a plateau, monitoring validation 
+            loss, and decreasing the learning rate if val loss does not improve for 2 epochs. The second, early stopping, 
+            also monitors val loss. If it does not improve for 4 epochs, the model stops training and uses weights from the 
+            epoch with the lowest validation loss.</p>
+
+        <p>Finally, we reduced the batch size and increased the number of epochs. The smaller batch size helps with 
+            regularization and reduces overfitting, and a higher number of epochs balances out the smaller batch size. 
+            The increased epochs allow the model to use them if needed, but it also uses early stopping when val loss stops 
+            improving.</p>
+        
         <h2>Results</h2>
-        <p>Outline the results and findings of the project, plots and figures to show the results -
-            ensure they are clear, concise, and relevant.</p>
+        
+        <p>After revisions, our model produced the following results:</p>
+
+        <p>(images)</p>
 
         <h2>Discussion</h2>
-        <p>Discuss the context of your results, how the results relate to each other and how to interpret them.
-            Revisit challenges you encountered and how you mitigated or solved them.
-            If applicable, put your project in relation to other work in the same field.
-        </p>
 
-        <h2>Conclusion</h2>
-        <p>Summarize the main results and implications of your project.</p>
+        <h3>Results</h3>
+        
+        <p>We manipulated our data to give us two additional ways of training our model. In the original version, we used 
+            the unedited replies and used BERT to get a single mean-pooled embedding vector of length 768 for each reply, 
+            and then trained our model on those embeddings. Our next strategy was to use the same mean-pooling technique, 
+            but on both the reply and the comment it was responding to by concatenating the two together, separated by a 
+            comma, with the labels “Comment: “ and “Reply: “ prefixing the respective texts. This was done in hopes of 
+            providing our model with extra context for each reply to better predict sarcasm. Our third way of using the 
+            data was to use just the replies again, only this time altering the text to contain no punctuation or capital 
+            letters. This was done in order to compare with our first technique and give us an idea of how much punctuation 
+            and capital letters affect the accuracy of sarcasm predictions.</p>
+
+        <p>Of these 3, the method that performed best was using just the unedited replies, getting a validation accuracy of 
+            68%. The comment AND reply method got 63.75% validation accuracy on its best epoch, and the replies stripped of 
+            punctuation and capital letters got a 66%. This was surprising to us, as we hypothesized that the extra context 
+            of using the comments would’ve yielded the highest accuracy due to the nature of sarcasm, where understanding 
+            the sarcasticness of a sentence heavily relies on the greater context surrounding that sentence. After seeing 
+            this result, we further hypothesize that this method did not perform as well due to the mean pooling that we 
+            used on the sentence embeddings, with the idea being that by averaging all of the token embeddings together, we 
+            lose the information that separates the comment and reply, leaving us with an embedding that just represents 
+            the comment and reply together as one sentence, diluting the sarcasticness or non-sarcasticness of the reply.</p>
+
+        <p>As for the data stripped of punctuation and capital letters, this less accurate result confirmed our hypothesis 
+            that punctuation and capital letters play a key role in conveying sarcasm through text.</p>
+
+        <h3>Challenges</h3>
+
+        <p>We faced multiple challenges throughout our project. Our first challenge was to format the initial data files. 
+            The information we required was split between CSV and JSON files and not formatted correctly, so we had to 
+            problem-solve to extract the necessary responses from comments.json (using the response IDs from 
+            train_balanced.csv) and create a combined dataset. </p>
+
+        <p>Next, we worked to understand how to extract the right embeddings from BERT. We first ran the process with 
+            regular pooling, then tested mean pooling to improve the results and found that it performed much better. 
+            After completing the first run with the regular responses, we saw that punctuation and certain structures 
+            affected the output. We decided to try running our model on two different inputs: with more context (comments), 
+            and without punctuation. We found that the results were slightly worse, which supported our overall idea that 
+            our model could not reach or surpass 70% accuracy without undergoing significant validation loss (overfitting).</p>
+
+        <p>Another component that was not explicit to us was the threshold at which we were trying to establish whether 
+            something was sarcastic or not. We initially set this to 0.5, but used the following section of code to 
+            determine the threshold to achieve optimal performance.</p>
+
+        <p>(images)</p>
+
+        <p>We found out that our model performed best at a threshold of around 0.4, with the best F1 score being 71%. The 
+            threshold is responsible for determining the cutoff when something should be considered sarcastic or not; by 
+            lowering this value slightly, we allow our model to predict sarcasm more often. This may allow some more false 
+            positives, but this allows it to identify more texts that are actually sarcastic; in our case, false positives 
+            are a beneficial tradeoff to optimize our model. </p>
+
+        <p>Further, to ensure the quality of our model’s probabilities was sound, we checked the calibration of our model. 
+            It turned out our calibration curves were strong; predicted probabilities closely matched true sarcasm rates 
+            (e.g., 70% predicted ≈ 70% actually sarcastic). Since we used a large dataset and binary cross-entropy loss, 
+            our model’s probability outputs were naturally stable. Whenever our model predicts sarcasm, it does so “softly”, 
+            avoiding extremity spikes in predictions, which visually improves its calibration. Additionally, our 
+            preprocessing (flattened responses, cleaned comments) reduced noise and allowed the model to form more or less 
+            consistent probability patterns. </p>
+
+        <p>The greater challenges that we were unable to overcome stemmed mainly from the short time we had to complete the 
+            project. We felt somewhat limited without fine-tuning BERT. We were training on the mean pooling of embeddings, 
+            and we think our result could have improved if we had the opportunity to train on different dimensions of 
+            embeddings (the standard is 768-dimensional embeddings for each token). It seems a lot of semantic value is 
+            lost during the process. Another challenge could stem from the source of our data; although there are very many 
+            responses and comments, Reddit has unique language conventions that might be more specific to text or 
+            reply-style language compared to daily spoken or message language.</p>
+
+        <h2>Context & Conclusion</h2>
+        
+        <p>Sarcasm detection is a relatively new and rapidly developing challenge in the field of natural language 
+            processing. Improving sarcasm detection could significantly enhance sentiment analysis and other systems 
+            that rely on accurate interpretation of language and context.</p>
+
+        <p>Other projects focused on sarcasm detection are extremely recent, reflecting a growing interest in creating 
+            models that can better understand nuance and meaning. Geek for Geeks completed a similar project (without BERT) 
+            using a dataset of labeled article headlines and achieved 98% accuracy on their test data. Hugging Face also 
+            used labeled news article headline data with a similar structure to our project and reached 89% accuracy after 
+            3 epochs.</p>
+
+        <p>(summary of results)</p>
 
         <footer>
             © 2025 | Artificial Neural Networks
