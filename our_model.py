@@ -87,9 +87,54 @@ plt.ylabel("Loss")
 plt.title("Training vs Validation Loss")
 plt.show()
 
-# optional: evaluate on held-out test set
+# evaluate on held-out test set
 test_loss, test_acc = model.evaluate(x_test, y_test, verbose=1)
 print("Test loss:", test_loss)
 print("Test accuracy:", test_acc)
 
-model.save("sarcasm_file.h5")
+# calibration curve
+# calibration curves:
+# numerical predicaiton and targets _> check model accuracy scores agaisnt diff decision thresholds
+# -> for diff sensitivities of the output 
+from sklearn.calibration import calibration_curve
+from sklearn.metrics import brier_score_loss
+
+# predicted probabilities on test set
+y_prob = model.predict(x_test, verbose=0).ravel()  # shape (N_test,)
+
+# compute calibration curve
+prob_true, prob_pred = calibration_curve(
+    y_test, y_prob,
+    n_bins=10,        # number of bins
+    strategy='quantile'  # each bin has ~same # of samples
+)
+
+# plot reliability (calibration curve) diagram
+plt.figure()
+plt.plot(prob_pred, prob_true, marker="o", linewidth=1, label="Model")
+plt.plot([0, 1], [0, 1], linestyle="--", label="Perfectly calibrated")
+plt.xlabel("Predicted probability")
+plt.ylabel("Observed fraction of positives")
+plt.title("Calibration curve (reliability diagram)")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# threshold search 
+from sklearn.metrics import f1_score
+
+best_thr = 0.5
+best_f1 = -1
+
+for thr in np.linspace(0.1, 0.9, 17):  # 0.1 → 0.9 in steps of 0.05
+    preds = (y_prob >= thr).astype(int)
+    f1 = f1_score(y_test, preds)
+    if f1 > best_f1:
+        best_f1 = f1
+        best_thr = thr
+
+print("Best threshold:", best_thr)
+print("F1 at best threshold:", best_f1)
+
+# save model to be later loaded into app.py
+model.save("sarcasm_file_withcalib.h5")
