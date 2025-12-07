@@ -7,8 +7,8 @@ from tensorflow.keras.layers import Dense, Dropout
 from sklearn.preprocessing import StandardScaler
 
 # load embeddings
-train_data = np.load("./data/train_embeddings_mean.npz")
-test_data = np.load("./data/test_embeddings_mean.npz")
+train_data = np.load("./data/paired_train_embeddings_mean.npz")
+test_data = np.load("./data/paired_test_embeddings_mean.npz")
 
 x_train = train_data["embeddings"]      # shape (N, 768)
 y_train = train_data["labels"]          # shape (N,)
