@@ -3,21 +3,37 @@
 ## Data 
 
 **comments.json:** large text file acquired from Index of /old/SARC/2.0/main. This is the file used to extract response and any other necessary text, which will be used to get our embeddings.  
+
 **labeled_paired_test_embeddings:** text embeddings retrieved from BERT with comment context; this is what we we will test on our model  
+
 **labeled_paired_train_embeddings:** text embeddings retrieved from BERT with comment context; this is what we we will train on our model  
+
 **responses_and_comments_flat_test.csv:** extracted from comments; contains comments and responses to be used for testing  
+
 **responses_and_comments_flat_train.csv:** extracted from comments; contains comments and responses to be used for training  
+
 **responses_flat_test.csv:** responses retrieved from from test_small_comments_fixed.json using response ids in test-balanced.csv, formatted as: response_id,response_text,label  
+
 **responses_flat_train.csv:** responses retrieved from from test_small_comments_fixed.json using response ids in train-balanced.csv, formatted as: response_id,response_text,label  
+
 **strip_responses_test.csv:** responses retrieved from comments disregarding punctuation; for testing  
+
 **strip_responses_train.csv:** responses retrieved from comments disregarding punctuation for training  
+
 **stripped_test_embeddings_mean.npz:** embedding retrieved from BERT on stripped responses; for testing  
-**stripped_train_embeddings_mean.npz:** embedding retrieved from BERT on stripped responses; for training  
+
+**stripped_train_embeddings_mean.npz:** embedding retrieved from BERT on stripped responses; for training 
+
 **test_embeddings_mean.npz:** BERT embeddings on regular responses using mean pooling; for testing  
+
 **test_small_comments_fixed.json:** shrunk big comments.csv to contain only response information, which is later formatted in responses_flat_test.csv; used test-balanced.csv to get appropriate response ids; for testing  
+
 **test-balanced.csv:** sequence file with testing data (20%); contains necessary post, comment, responses ids, as well as sarcasm scores (0/1) for the two given responses; sourced from Index of /old/SARC/2.0/main  
+
 **train_embeddings_mean.npz:** BERT embeddings on regular responses using mean pooling; for testing  
+
 **train_small_comments_fixed.json:** shrunk big comments.csv to contain only response information, which is later formatted in responses_flat_train.csv; used train-balanced.csv to get appropriate response ids; for training  
+
 **train-balanced.csv:** sequence file with training data (80%); contains necessary post, comment, responses ids, as well as sarcasm scores (0/1) for the two given responses; sources from Index of /old/SARC/2.0/main  
 
 
@@ -26,10 +42,15 @@
 ## Data process
 
 **get_embeddings.py:** generate BERT embeddings to be later used to pass through our model; generates Nx768 dimensional embeddings  
+
 **real_flattener.py:** extracts responses from smaller comments file into necessary format for embedding generation  
+
 **shrinkcomments.py:** shrinks large comments.csv file into viewed csv file for responses and comments based on ids  
+
 **stripped_punctuation.py:** strips response text of any punctuation (except commas and spaces); made to later make comparison in punctuation and semantic relation  
 
 ## Other scripts  
+
 **model_trainer.py:** our neural network structure that trains our model on the data  
+
 **one_hot_baseline.py:** simple baseline model to compare our model to; one-hot encoder  
