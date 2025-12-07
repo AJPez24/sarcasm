@@ -4,6 +4,7 @@ from transformers import BertTokenizer, BertModel
 import numpy as np
 from tqdm import tqdm
 
+# load tokenizer and model from bert
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertModel.from_pretrained("bert-base-uncased")
 
@@ -31,20 +32,20 @@ for response in tqdm(responses, desc="Embedding stripped test comment-response p
     with torch.no_grad():
         output = model(**encoding)
 
-    #mean pooling
+    # mean pooling
     token_embeddings = output.last_hidden_state
     current_embedding = token_embeddings.mean(dim=1).squeeze().numpy()
 
     embeddings.append(current_embedding)
 
-#convert to numpy arrays
+# convert to numpy arrays
 embeddings = np.vstack(embeddings)
 labels = np.array(labels)
 response_ids = np.array(response_ids)
-# comment_ids = np.array(comment_ids)
+# comment_ids = np.array(comment_ids) #(residual from paired embeddings)
 
-print("Embeddings shape:", embeddings.shape)
-print("Labels shape:", labels.shape)
+# print("Embeddings shape:", embeddings.shape)
+# print("Labels shape:", labels.shape)
 
 #save in a new npz file
 np.savez("./data/stripped_test_embeddings_mean.npz", embeddings=embeddings, labels=labels, response_ids=response_ids)

@@ -7,19 +7,20 @@ from tensorflow.keras.layers import Dense, Dropout
 from sklearn.preprocessing import StandardScaler
 
 # load embeddings
-train_data = np.load("./data/train_embeddings_mean.npz")
+train_data = np.load("./data/train_embeddings_mean.npz")  
 test_data = np.load("./data/test_embeddings_mean.npz")
 
-x_train = train_data["embeddings"]      # shape (N, 768)
-y_train = train_data["labels"]          # shape (N,)
 
-x_test = test_data["embeddings"]      # shape (N, 768)
-y_test = test_data["labels"]          # shape (N,)
+x_train = train_data["embeddings"]      #shape (n, 768)
+y_train = train_data["labels"]          #shape (n,)
+
+x_test = test_data["embeddings"]      #shape (n, 768)
+y_test = test_data["labels"]          #shape (n,)
 
 print("Embeddings:", x_train.shape)
 print("Labels:", y_train.shape)
 
-
+#four dense layers
 model = Sequential([
     Dense(512, activation="relu", input_shape=(768,)),
     Dropout(0.3),
@@ -30,13 +31,14 @@ model = Sequential([
     Dense(64, activation="relu"),
     Dropout(0.3),
 
-    Dense(1, activation="sigmoid")
+    Dense(1, activation="sigmoid") #binary output and single classification
 ])
 
 
-
+#softens target labels to prevent overfitting
 smoothing_loss = tf.keras.losses.BinaryCrossentropy(label_smoothing=0.05)
 
+#using adamw optimizer because it separates weight gradients and regularization
 adamw = tf.keras.optimizers.AdamW(
             learning_rate=3e-4,
             weight_decay=3e-4 
@@ -45,22 +47,22 @@ adamw = tf.keras.optimizers.AdamW(
 model.compile(
     loss=smoothing_loss,
     optimizer=adamw,
-    metrics=["accuracy"]
+    metrics=["accuracy"] #reports accuracy for training and validation
 )
 
-
+#training callbacks control learning behavior
 callbacks = [
-    tf.keras.callbacks.ReduceLROnPlateau(
+    tf.keras.callbacks.ReduceLROnPlateau(  #lowers learning rate when validation loss stops improving
         monitor="val_loss",
-        factor=0.5,
-        patience=2,
-        min_lr=1e-6,
-        verbose=1
+        factor=0.5,  #cuts learning rate in half when triggered
+        patience=2,  #waits 2 epochs of no improvement before reducing learning rate
+        min_lr=1e-6,  #won't reduce lr below this number
+        verbose=1 
     ),
     tf.keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=10,
-        restore_best_weights=True,
+        patience=10,  #waits 10 epochs of no improvement before early stopping
+        restore_best_weights=True, #restore to best performing weights
         verbose=1
     )
 ]
@@ -71,70 +73,50 @@ model.summary()
 history = model.fit(
     x_train,
     y_train,
-    batch_size=16,
-    epochs=30,          # let callbacks stop early
+    batch_size=16,  #number of samples processed before the weights update
+    epochs=20,          #max number of epochs (let callbacks stop early)
     validation_split=0.1,
-    callbacks=callbacks,
+    callbacks=callbacks,  #apply callbacks
     verbose=1
 )
 
-# plot loss
-plt.plot(history.history["loss"], label="Train Loss")
-plt.plot(history.history["val_loss"], label="Val Loss")
-plt.legend()
-plt.xlabel("Epoch")
+# PLOTS FOR FINAL MODEL
+
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+#for visuals
+sns.set_theme(style = "ticks")
+
+#confusion matrix
+y_pred = (model.predict(x_test) > 0.4).astype(int)  #threshold of 0.4 based off of calibration curve
+cm = confusion_matrix(y_test, y_pred)
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Greens',  
+            xticklabels=['Non-Sarcastic', 'Sarcastic'],
+            yticklabels=['Non-Sarcastic', 'Sarcastic'])
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Final Model Confusion Matrix")
+plt.show()
+
+
+#probability histogram
+y_prob = model.predict(x_test).ravel() #.ravel() flattens multidimensional data
+plt.hist(y_prob, bins=10, color='darkgreen')
+plt.title("Final Model Predicted Probability Distribution")
+plt.xlabel("Predicted Probability")
+plt.ylabel("Frequency")
+sns.despine()  #remove spines from graph
+plt.show()
+
+
+#loss plot
+plt.plot(history.history["loss"], label="Train Loss", color='darkorange')
+plt.plot(history.history["val_loss"], label="Val Loss", color = 'darkgreen')
+plt.title("Final Model Loss")
+plt.xlabel("Number of Epochs")
+sns.despine()  #remove spines from graph
 plt.ylabel("Loss")
-plt.title("Training vs Validation Loss")
-plt.show()
-
-# evaluate on held-out test set
-test_loss, test_acc = model.evaluate(x_test, y_test, verbose=1)
-print("Test loss:", test_loss)
-print("Test accuracy:", test_acc)
-
-# calibration curve
-# calibration curves:
-# numerical predicaiton and targets _> check model accuracy scores agaisnt diff decision thresholds
-# -> for diff sensitivities of the output 
-from sklearn.calibration import calibration_curve
-from sklearn.metrics import brier_score_loss
-
-# predicted probabilities on test set
-y_prob = model.predict(x_test, verbose=0).ravel()  # shape (N_test,)
-
-# compute calibration curve
-prob_true, prob_pred = calibration_curve(
-    y_test, y_prob,
-    n_bins=10,        # number of bins
-    strategy='quantile'  # each bin has ~same # of samples
-)
-
-# plot reliability (calibration curve) diagram
-plt.figure()
-plt.plot(prob_pred, prob_true, marker="o", linewidth=1, label="Model")
-plt.plot([0, 1], [0, 1], linestyle="--", label="Perfectly calibrated")
-plt.xlabel("Predicted probability")
-plt.ylabel("Observed fraction of positives")
-plt.title("Calibration curve (reliability diagram)")
 plt.legend()
-plt.grid(True)
 plt.show()
-
-# threshold search 
-from sklearn.metrics import f1_score
-
-best_thr = 0.5
-best_f1 = -1
-
-for thr in np.linspace(0.1, 0.9, 17):  # 0.1 → 0.9 in steps of 0.05
-    preds = (y_prob >= thr).astype(int)
-    f1 = f1_score(y_test, preds)
-    if f1 > best_f1:
-        best_f1 = f1
-        best_thr = thr
-
-print("Best threshold:", best_thr)
-print("F1 at best threshold:", best_f1)
-
-# save model to be later loaded into app.py
-model.save("./models/final_sarcasm_model.h5")
