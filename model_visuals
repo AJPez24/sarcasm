@@ -52,6 +52,8 @@ history = model.fit(
     verbose=1
 )
 
+#PLOTS FOR INITIAL MODEL
+
 import seaborn as sns
 
 #setting theme for plots
@@ -61,7 +63,9 @@ sns.set_theme(style = "ticks")
 y_pred = (model.predict(X_test) > 0.5).astype(int)
 cm = confusion_matrix(y_test, y_pred)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-disp.plot(cmap="Reds")
+disp.plot(cmap="Reds", 
+            xticklabels=['Non-Sarcastic', 'Sarcastic'],
+            yticklabels=['Non-Sarcastic', 'Sarcastic'])
 plt.title("Initial Model Confusion Matrix - 30 Epochs ")
 plt.show()
 
@@ -122,6 +126,8 @@ model = Sequential([
     Dense(1, activation="sigmoid")
 ])
 
+
+
 smoothing_loss = tf.keras.losses.BinaryCrossentropy(label_smoothing=0.05)
 
 adamw = tf.keras.optimizers.AdamW(
@@ -165,18 +171,29 @@ history = model.fit(
     verbose=1
 )
 
+# PLOTS FOR FINAL MODEL
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
+#for visuals
 sns.set_theme(style = "ticks")
+
 #confusion matrix
-#y_pred = (model.predict(X_test) > 0.5).astype(int)
-#cm = confusion_matrix(y_test, y_pred)
-#disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-#disp.plot(cmap="Greens")
-#plt.title("Final Model Confusion Matrix")
-#plt.show()
+y_prob = model.predict(x_test)
+y_pred = (y_prob > 0.4).astype(int)
+cm = confusion_matrix(y_test, y_pred)
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Greens',
+            xticklabels=['Non-Sarcastic', 'Sarcastic'],
+            yticklabels=['Non-Sarcastic', 'Sarcastic'])
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Final Model Confusion Matrix")
+plt.show()
+
 
 #probability histogram
-y_prob = model.predict(X_test).ravel()
+y_prob = model.predict(x_test).ravel()
 plt.hist(y_prob, bins=10, color='darkgreen')
 plt.title("Final Model Predicted Probability Distribution")
 plt.xlabel("Predicted Probability")
@@ -193,4 +210,90 @@ plt.xlabel("Number of Epochs")
 sns.despine()
 plt.ylabel("Loss")
 plt.legend()
+plt.show()
+
+#BASELINE MODEL
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from sklearn.model_selection import train_test_split
+
+df = pd.read_csv("./data/responses_flat_train.csv")
+
+responses = df["response_text"].astype(str).tolist()
+labels = df["label"].tolist()
+
+# Tokenize text
+vocab_size = 5000
+tokenizer = Tokenizer(num_words=vocab_size)
+tokenizer.fit_on_texts(responses)
+x = tokenizer.texts_to_matrix(responses, mode="binary")  # one-hot bag-of-words
+
+y = np.array(labels)
+
+print("One-hot X shape:", x.shape)
+print("One-hot Y shape:", y.shape)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.1, random_state=42, stratify=y
+)
+
+model = Sequential([
+    Dense(512, activation="relu", input_shape=(vocab_size,)),
+    # Dropout(0.1),
+    Dense(128, activation="relu"),
+    # Dropout(0.2),
+    Dense(128, activation="relu"),
+    # Dropout(0.1),
+    Dense(1, activation="sigmoid")
+])
+
+model.compile(
+    loss="binary_crossentropy",
+    optimizer="adam",
+    metrics=["accuracy"]
+)
+
+model.summary()
+
+history = model.fit(
+    X_train,
+    y_train,
+    batch_size=32,
+    epochs=1,
+    validation_split=0.1,
+    verbose=1
+)
+
+#BASELINE MODEL PLOTS
+
+#probability histogram
+y_prob = model.predict(X_test).ravel()
+plt.hist(y_prob, bins=10, color='navy')
+plt.title("Baseline Model Predicted Probability Distribution")
+plt.xlabel("Predicted Probability")
+plt.ylabel("Frequency")
+sns.despine()
+plt.show()
+
+#confusion matrix
+
+y_prob = model.predict(X_test)
+y_pred = (y_prob > 0.35).astype(int)
+
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(
+    cm, annot=True, fmt='d', cmap='Blues',
+    xticklabels=['Non-Sarcastic', 'Sarcastic'],
+    yticklabels=['Non-Sarcastic', 'Sarcastic']
+)
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Baseline Model Confusion Matrix")
 plt.show()
