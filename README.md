@@ -54,3 +54,5 @@
 ***model_trainer.py:*** our neural network structure that trains our model on the data  
 
 ***one_hot_baseline.py:*** simple baseline model to compare our model to; one-hot encoder  
+
+***initial_model_trainer.py:*** our initial neural network structure that trains our model on the data  
