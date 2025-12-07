@@ -56,3 +56,78 @@
 ***one_hot_baseline.py:*** simple baseline model to compare our model to; one-hot encoder  
 
 ***initial_model_trainer.py:*** our initial neural network structure that trains our model on the data  
+
+# Figures
+
+***[model]_loss_graph*** Training and validation loss across epochs for each model. Each was created in its respective trainer file using a variation of the following code block.
+
+```python
+#loss plot
+plt.plot(history.history["loss"], label="Train Loss", color='darkorange')
+plt.plot(history.history["val_loss"], label="Val Loss", color = 'darkgreen')
+plt.title("Final Model Loss")
+plt.xlabel("Number of Epochs")
+sns.despine()  #remove spines from graph
+plt.ylabel("Loss")
+plt.legend()
+plt.show()
+```
+
+***final_calibration_curve*** Calibration curve for our final model, showing the relationship between predicted probabilities and actual sarcasm frequencies. The curve was generated in the model_trainer.py file using the following code block.
+```python
+# calibration curve
+# numerical prediction and targets _> check model accuracy scores against different decision thresholds
+# -> for diff sensitivities of the output 
+from sklearn.calibration import calibration_curve
+from sklearn.metrics import brier_score_loss
+
+# predicted probabilities on test set
+y_prob = model.predict(x_test, verbose=0).ravel()  # shape (N_test,)
+
+# compute calibration curve
+prob_true, prob_pred = calibration_curve(
+    y_test, y_prob,
+    n_bins=10,        # number of bins
+    strategy='quantile'  # each bin has ~same # of samples
+)
+
+# plot reliability (calibration curve) diagram
+plt.figure()
+plt.plot(prob_pred, prob_true, marker="o", linewidth=1, label="Model")
+plt.plot([0, 1], [0, 1], linestyle="--", label="Perfectly calibrated")
+plt.xlabel("Predicted probability")
+plt.ylabel("Observed fraction of positives")
+plt.title("Calibration curve (reliability diagram)")
+plt.legend()
+plt.grid(True)
+plt.show()
+```
+
+***[model]_confusion_matrix*** Confusion matrix for each model for sarcasm classification on the test set using a probability threshold of 0.5 for the baseline and initial models, and 0.4 for our final model in accordance with the calibration curve. Each was created in its respective trainer file using a variation of the following code block.
+
+```python
+#confusion matrix
+y_pred = (model.predict(x_test) > 0.4).astype(int)  #threshold of 0.4 based off of calibration curve
+cm = confusion_matrix(y_test, y_pred)
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Greens',  
+            xticklabels=['Non-Sarcastic', 'Sarcastic'],
+            yticklabels=['Non-Sarcastic', 'Sarcastic'])
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Final Model Confusion Matrix")
+plt.show()
+```
+
+***[model]_prob_distribution*** Histogram of predicted sarcasm probabilities for each model's test set. Each was created in its respective trainer file using a variation of the following code block.
+```python
+#probability histogram
+y_prob = model.predict(x_test).ravel() #.ravel() flattens multidimensional data
+plt.hist(y_prob, bins=10, color='darkgreen')
+plt.title("Final Model Predicted Probability Distribution")
+plt.xlabel("Predicted Probability")
+plt.ylabel("Frequency")
+sns.despine()  #remove spines from graph
+plt.show()
+```
+
