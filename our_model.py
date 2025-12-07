@@ -1,6 +1,3 @@
-# Model file 
-
-# imports 
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -9,9 +6,9 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from sklearn.preprocessing import StandardScaler
 
-# load embeddings attained from bert 
-train_data = np.load("./data/train_embeddings_mean.npz")
-test_data = np.load("./data/test_embeddings_mean.npz")
+# load embeddings
+train_data = np.load("./data/paired_train_embeddings_mean.npz")
+test_data = np.load("./data/paired_test_embeddings_mean.npz")
 
 x_train = train_data["embeddings"]      # shape (N, 768)
 y_train = train_data["labels"]          # shape (N,)
@@ -22,10 +19,10 @@ y_test = test_data["labels"]          # shape (N,)
 print("Embeddings:", x_train.shape)
 print("Labels:", y_train.shape)
 
-# model structure
+
 model = Sequential([
     Dense(512, activation="relu", input_shape=(768,)),
-    Dropout(0.3), # dropout to avoid overfitting 
+    Dropout(0.3),
 
     Dense(256, activation="relu"),
     Dropout(0.3),
@@ -37,16 +34,14 @@ model = Sequential([
 ])
 
 
-# smoothing loss allows our model to avoid extremities in probability 
+
 smoothing_loss = tf.keras.losses.BinaryCrossentropy(label_smoothing=0.05)
 
-# adamW optimizer
 adamw = tf.keras.optimizers.AdamW(
             learning_rate=3e-4,
             weight_decay=3e-4 
         )
 
-# model compilation 
 model.compile(
     loss=smoothing_loss,
     optimizer=adamw,
@@ -77,7 +72,7 @@ history = model.fit(
     x_train,
     y_train,
     batch_size=16,
-    epochs=20,          # let callbacks stop early
+    epochs=30,          # let callbacks stop early
     validation_split=0.1,
     callbacks=callbacks,
     verbose=1

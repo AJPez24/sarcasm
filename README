@@ -1,1 +1,9 @@
-Testing git workflow
+get_embeddings.py runs each string in responses_flat through bert and puts the embeddings in the bert_embeddings.npz file.
+
+our_model.py is the code for the fully connected model that trains on the bert embedding data
+
+json_viewer is used for viewing the data and checking the format of the large json files.
+
+
+realflattener.py and shrinkcomments.py were generated using chatGPT and just serve to format our data in a way that's 
+conducive to putting through the bert embeddings.
