@@ -17,11 +17,11 @@ y = data["labels"]          # shape (N,)
 print("Embeddings:", X.shape)
 print("Labels:", y.shape)
 
-# train/test split
+# train/test split 80/20
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.1, random_state=42, stratify=y
 )
-# model structure
+# model structure 3 dense layers
 model = Sequential([
     Dense(512, activation="relu", input_shape=(768,)),
     Dropout(0.2),
@@ -30,12 +30,10 @@ model = Sequential([
     Dense(1, activation="sigmoid")  # binary output
 ])
 
-# try adding more layers ... larger neuron filtering for both layers?
-# change dropout to 0.5 maybe 
 
-# mocel compilation
+# model compilation
 model.compile(
-    loss="binary_crossentropy",
+    loss="binary_crossentropy", #for binary predictions
     optimizer="adam",
     metrics=["accuracy"]
 )
@@ -47,7 +45,7 @@ history = model.fit(
     X_train,
     y_train,
     batch_size=32,
-    epochs=30,
+    epochs=30,       
     validation_split=0.1,
     verbose=1
 )
@@ -60,7 +58,7 @@ import seaborn as sns
 sns.set_theme(style = "ticks")
 
 #confusion matrix
-y_pred = (model.predict(X_test) > 0.5).astype(int)
+y_pred = (model.predict(X_test) > 0.5).astype(int) #threshold 0.5, calculating y_pred from test data
 cm = confusion_matrix(y_test, y_pred)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm)
 disp.plot(cmap="Reds", 
@@ -70,7 +68,7 @@ plt.title("Initial Model Confusion Matrix - 30 Epochs ")
 plt.show()
 
 #probability histogram
-y_prob = model.predict(X_test).ravel()
+y_prob = model.predict(X_test).ravel() # .ravel() flattens multidimensional data
 plt.hist(y_prob, bins=30, color='darkred')
 plt.title("Initial Model Predicted Probability Distribution")
 plt.xlabel("Predicted Probability")
@@ -100,19 +98,20 @@ from tensorflow.keras.layers import Dense, Dropout
 from sklearn.preprocessing import StandardScaler
 
 # load embeddings
-train_data = np.load("./data/train_embeddings_mean.npz")
+train_data = np.load("./data/train_embeddings_mean.npz")  
 test_data = np.load("./data/test_embeddings_mean.npz")
 
-x_train = train_data["embeddings"]      # shape (N, 768)
-y_train = train_data["labels"]          # shape (N,)
 
-x_test = test_data["embeddings"]      # shape (N, 768)
-y_test = test_data["labels"]          # shape (N,)
+x_train = train_data["embeddings"]      #shape (n, 768)
+y_train = train_data["labels"]          #shape (n,)
+
+x_test = test_data["embeddings"]      #shape (n, 768)
+y_test = test_data["labels"]          #shape (n,)
 
 print("Embeddings:", x_train.shape)
 print("Labels:", y_train.shape)
 
-
+#four dense layers
 model = Sequential([
     Dense(512, activation="relu", input_shape=(768,)),
     Dropout(0.3),
@@ -123,13 +122,14 @@ model = Sequential([
     Dense(64, activation="relu"),
     Dropout(0.3),
 
-    Dense(1, activation="sigmoid")
+    Dense(1, activation="sigmoid") #binary output and single classification
 ])
 
 
-
+#softens target labels to prevent overfitting
 smoothing_loss = tf.keras.losses.BinaryCrossentropy(label_smoothing=0.05)
 
+#using adamw optimizer because it separates weight gradients and regularization
 adamw = tf.keras.optimizers.AdamW(
             learning_rate=3e-4,
             weight_decay=3e-4 
@@ -138,22 +138,22 @@ adamw = tf.keras.optimizers.AdamW(
 model.compile(
     loss=smoothing_loss,
     optimizer=adamw,
-    metrics=["accuracy"]
+    metrics=["accuracy"] #reports accuracy for training and validation
 )
 
-
+#training callbacks control learning behavior
 callbacks = [
-    tf.keras.callbacks.ReduceLROnPlateau(
+    tf.keras.callbacks.ReduceLROnPlateau(  #lowers learning rate when validation loss stops improving
         monitor="val_loss",
-        factor=0.5,
-        patience=2,
-        min_lr=1e-6,
-        verbose=1
+        factor=0.5,  #cuts learning rate in half when triggered
+        patience=2,  #waits 2 epochs of no improvement before reducing learning rate
+        min_lr=1e-6,  #won't reduce lr below this number
+        verbose=1 
     ),
     tf.keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=10,
-        restore_best_weights=True,
+        patience=10,  #waits 10 epochs of no improvement before early stopping
+        restore_best_weights=True, #restore to best performing weights
         verbose=1
     )
 ]
@@ -164,14 +164,15 @@ model.summary()
 history = model.fit(
     x_train,
     y_train,
-    batch_size=16,
-    epochs=20,          # let callbacks stop early
+    batch_size=16,  #number of samples processed before the weights update
+    epochs=20,          #max number of epochs (let callbacks stop early)
     validation_split=0.1,
-    callbacks=callbacks,
+    callbacks=callbacks,  #apply callbacks
     verbose=1
 )
 
 # PLOTS FOR FINAL MODEL
+
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 
@@ -179,11 +180,10 @@ import seaborn as sns
 sns.set_theme(style = "ticks")
 
 #confusion matrix
-y_prob = model.predict(x_test)
-y_pred = (y_prob > 0.4).astype(int)
+y_pred = (model.predict(x_test) > 0.4).astype(int)  #threshold of 0.4 based off of calibration curve
 cm = confusion_matrix(y_test, y_pred)
 
-sns.heatmap(cm, annot=True, fmt='d', cmap='Greens',
+sns.heatmap(cm, annot=True, fmt='d', cmap='Greens',  
             xticklabels=['Non-Sarcastic', 'Sarcastic'],
             yticklabels=['Non-Sarcastic', 'Sarcastic'])
 plt.xlabel("Predicted")
@@ -193,12 +193,12 @@ plt.show()
 
 
 #probability histogram
-y_prob = model.predict(x_test).ravel()
+y_prob = model.predict(x_test).ravel() #.ravel() flattens multidimensional data
 plt.hist(y_prob, bins=10, color='darkgreen')
 plt.title("Final Model Predicted Probability Distribution")
 plt.xlabel("Predicted Probability")
 plt.ylabel("Frequency")
-sns.despine()
+sns.despine()  #remove spines from graph
 plt.show()
 
 
@@ -207,12 +207,12 @@ plt.plot(history.history["loss"], label="Train Loss", color='darkorange')
 plt.plot(history.history["val_loss"], label="Val Loss", color = 'darkgreen')
 plt.title("Final Model Loss")
 plt.xlabel("Number of Epochs")
-sns.despine()
+sns.despine()  #remove spines from graph
 plt.ylabel("Loss")
 plt.legend()
 plt.show()
 
-#BASELINE MODEL
+#BASELINE MODEL WITH FINAL MODEL PARAMETERS
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -224,57 +224,100 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 
-df = pd.read_csv("./data/responses_flat_train.csv")
+#load train and test csvs
+train_df = pd.read_csv("./data/responses_flat_train.csv")
+test_df = pd.read_csv("./data/responses_flat_test.csv")
 
-responses = df["response_text"].astype(str).tolist()
-labels = df["label"].tolist()
+#exract text responses and labels from train
+train_responses = train_df["response_text"].astype(str).tolist()
+train_labels = train_df["label"].tolist()
 
-# Tokenize text
-vocab_size = 5000
-tokenizer = Tokenizer(num_words=vocab_size)
-tokenizer.fit_on_texts(responses)
-x = tokenizer.texts_to_matrix(responses, mode="binary")  # one-hot bag-of-words
+#exract text responses and labels from test
+test_responses = test_df["response_text"].astype(str).tolist()
+test_labels = test_df["label"].tolist()
 
-y = np.array(labels)
+#tokenize training text
+vocab_size = 5000  #chose 5000 for 5000 most frequent words
+train_tokenizer = Tokenizer(num_words=vocab_size)  #create tokenizer for training data
+train_tokenizer.fit_on_texts(train_responses) #learn word frequencies
+x_train = train_tokenizer.texts_to_matrix(train_responses, mode="binary")  #one-hot bag-of-words, each text is 5000-dim vector
+y_train = np.array(train_labels)
 
-print("One-hot X shape:", x.shape)
-print("One-hot Y shape:", y.shape)
+#tokenize test text
+test_tokenizer = Tokenizer(num_words=vocab_size) #create tokenizer for test data
+test_tokenizer.fit_on_texts(test_responses) #learn word frequencies
+x_test = test_tokenizer.texts_to_matrix(test_responses, mode="binary")  #one-hot bag-of-words
+y_test = np.array(test_labels)
 
-X_train, X_test, y_train, y_test = train_test_split(
-    x, y, test_size=0.1, random_state=42, stratify=y
-)
+print("One-hot X shape:", x_train.shape)
+print("One-hot Y shape:", y_train.shape)
 
+#four dense layers with dropout to prevent overfitting
 model = Sequential([
     Dense(512, activation="relu", input_shape=(vocab_size,)),
-    # Dropout(0.1),
-    Dense(128, activation="relu"),
-    # Dropout(0.2),
-    Dense(128, activation="relu"),
-    # Dropout(0.1),
+    Dropout(0.3),
+
+    Dense(256, activation="relu"),
+    Dropout(0.3),
+
+    Dense(64, activation="relu"),
+    Dropout(0.3),
+
     Dense(1, activation="sigmoid")
 ])
 
+#prevents model from becoming too confident, binary cross-entropy to measure difference
+smoothing_loss = tf.keras.losses.BinaryCrossentropy(label_smoothing=0.05)
+
+#adamw used in final model and baseline for comparison
+adamw = tf.keras.optimizers.AdamW(
+            learning_rate=3e-4,
+            weight_decay=3e-4 
+        )
+
+#compile full model and report accuracy
 model.compile(
-    loss="binary_crossentropy",
-    optimizer="adam",
+    loss=smoothing_loss,
+    optimizer=adamw,
     metrics=["accuracy"]
 )
 
+#callbacks to prevent overfitting
+callbacks = [
+    tf.keras.callbacks.ReduceLROnPlateau( #lowers learning rate when validation loss stops improving
+        monitor="val_loss",
+        factor=0.5,  #cuts learning rate in half when triggered
+        patience=2,  #waits 2 epochs of no improvement before reducing learning rate
+        min_lr=1e-6,  #won't reduce lr below this number
+        verbose=1 
+    ),
+    tf.keras.callbacks.EarlyStopping( #early stopping at best epoch
+        monitor="val_loss", 
+        patience=10, #waits 10 epochs of no improvement before early stopping
+        restore_best_weights=True, #restore to best epoch
+        verbose=1
+    )
+]
+
 model.summary()
 
+# fitting the model 
 history = model.fit(
-    X_train,
+    x_train,
     y_train,
-    batch_size=32,
-    epochs=1,
+    batch_size=16,
+    epochs=30,          #max epoch (let callbacks stop early)
     validation_split=0.1,
+    callbacks=callbacks, #implement callbacks
     verbose=1
 )
 
 #BASELINE MODEL PLOTS
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 #probability histogram
-y_prob = model.predict(X_test).ravel()
+y_prob = model.predict(X_test).ravel() #.ravel() flattens multidimensional data
 plt.hist(y_prob, bins=10, color='navy')
 plt.title("Baseline Model Predicted Probability Distribution")
 plt.xlabel("Predicted Probability")
@@ -283,10 +326,7 @@ sns.despine()
 plt.show()
 
 #confusion matrix
-
-y_prob = model.predict(X_test)
-y_pred = (y_prob > 0.35).astype(int)
-
+y_pred = (model.predict(X_test) > 0.5).astype(int) #threshold at 0.5 as standard
 cm = confusion_matrix(y_test, y_pred)
 sns.heatmap(
     cm, annot=True, fmt='d', cmap='Blues',
@@ -296,4 +336,13 @@ sns.heatmap(
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
 plt.title("Baseline Model Confusion Matrix")
+plt.show()
+
+# plot loss
+plt.plot(history.history["loss"], label="Train Loss")
+plt.plot(history.history["val_loss"], label="Val Loss")
+plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title("Training vs Validation Loss")
 plt.show()
