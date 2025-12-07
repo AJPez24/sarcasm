@@ -120,3 +120,30 @@ sns.despine()  #remove spines from graph
 plt.ylabel("Loss")
 plt.legend()
 plt.show()
+
+# calibration curve
+# numerical prediction and targets _> check model accuracy scores against different decision thresholds
+# -> for diff sensitivities of the output 
+from sklearn.calibration import calibration_curve
+from sklearn.metrics import brier_score_loss
+
+# predicted probabilities on test set
+y_prob = model.predict(x_test, verbose=0).ravel()  # shape (N_test,)
+
+# compute calibration curve
+prob_true, prob_pred = calibration_curve(
+    y_test, y_prob,
+    n_bins=10,        # number of bins
+    strategy='quantile'  # each bin has ~same # of samples
+)
+
+# plot reliability (calibration curve) diagram
+plt.figure()
+plt.plot(prob_pred, prob_true, marker="o", linewidth=1, label="Model")
+plt.plot([0, 1], [0, 1], linestyle="--", label="Perfectly calibrated")
+plt.xlabel("Predicted probability")
+plt.ylabel("Observed fraction of positives")
+plt.title("Calibration curve (reliability diagram)")
+plt.legend()
+plt.grid(True)
+plt.show()
