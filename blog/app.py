@@ -1,3 +1,4 @@
+# Adapted code from ChatGPT for flask implementation
 from flask import Flask, render_template, request, jsonify
 
 import numpy as np
@@ -5,10 +6,7 @@ import torch
 from transformers import BertTokenizer, BertModel
 from tensorflow.keras.models import load_model
 
-# -------------------------
-# LOAD BERT + CLASSIFIER
-# -------------------------
-
+# Loading BERT and classifier models
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 bert_model = BertModel.from_pretrained("bert-base-uncased")
 bert_model.eval()
@@ -18,13 +16,8 @@ clf_model = load_model("./models/final_sarcasm_model.h5")
 app = Flask(__name__)
 
 
-# -------------------------
-# TEXT → BERT MEAN EMBEDDING
-# (matches your training script)
-# -------------------------
-
+# Converts input text into BERT embedding
 def preprocess_text(text: str) -> np.ndarray:
-    # same as training: truncation=True, no padding/max_length specified
     encoding = tokenizer(
         text,
         return_tensors="pt",
@@ -33,24 +26,26 @@ def preprocess_text(text: str) -> np.ndarray:
 
     with torch.no_grad():
         output = bert_model(**encoding)
-        token_embeddings = output.last_hidden_state          # (1, seq_len, 768)
-        current_embedding = token_embeddings.mean(dim=1)     # (1, 768)
-        current_embedding = current_embedding.squeeze().numpy()  # (768,)
+        token_embeddings = output.last_hidden_state
+        # Using mean pooling
+        current_embedding = token_embeddings.mean(dim=1)
+        current_embedding = current_embedding.squeeze().numpy()
 
-    return current_embedding.reshape(1, -1)                  # (1, 768)
+    # Output is a 768-dimension vector
+    return current_embedding.reshape(1, -1)
 
-
+# Takes a sentence as input and returns the sarcasm label and probability
 def predict_sentence(text: str):
+    # Generates the BERT embedding
     x = preprocess_text(text)
-    prob = float(clf_model.predict(x, verbose=0)[0][0])      # sigmoid output
+    # Runs the embedding through the classifier model
+    prob = float(clf_model.predict(x, verbose=0)[0][0])
+    # Classify with threshold of 0.4
     label = "sarcastic" if prob >= 0.4 else "not sarcastic"
     return label, prob
 
 
-# -------------------------
-# ROUTES
-# -------------------------
-
+# Render and run the actual HTML website
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
