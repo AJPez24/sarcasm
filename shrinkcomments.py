@@ -6,9 +6,7 @@ TRAIN_PATH = "data/test-balanced.csv"
 BIG_COMMENTS_PATH = "data/comments.json"        # <-- full 2.6GB file
 OUT_SMALL = "small_comments_fixed.json"    # <-- new fixed small file
 
-# ------------------------------------------------------------
 # 1) Collect ALL reply IDs from train-balanced
-# ------------------------------------------------------------
 needed_ids = set()
 
 with open(TRAIN_PATH, encoding="utf-8") as f:
@@ -33,10 +31,9 @@ with open(TRAIN_PATH, encoding="utf-8") as f:
 
 print("Reply IDs needed from test-balanced:", len(needed_ids))
 
-# ------------------------------------------------------------
+
 # 2) Stream the BIG comments.json and keep only those IDs
-#    comments.json is a SINGLE BIG JSON OBJECT: {id: {...}, id2: {...}, ...}
-# ------------------------------------------------------------
+# comments.json is a SINGLE BIG JSON OBJECT: {id: {...}, id2: {...}, ...}
 small_comments = {}
 
 with open(BIG_COMMENTS_PATH, "rb") as f:
@@ -51,9 +48,8 @@ print("Missing reply IDs:", len(missing))
 if missing:
     print("Example missing IDs:", list(missing)[:20])
 
-# ------------------------------------------------------------
+
 # 3) Save the fixed small comments file
-# ------------------------------------------------------------
 with open(OUT_SMALL, "w", encoding="utf-8") as f:
     json.dump(small_comments, f)
 

@@ -1,3 +1,6 @@
+# Model file 
+
+# imports 
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -6,7 +9,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from sklearn.preprocessing import StandardScaler
 
-# load embeddings
+# load embeddings attained from bert 
 train_data = np.load("./data/train_embeddings_mean.npz")
 test_data = np.load("./data/test_embeddings_mean.npz")
 
@@ -19,10 +22,10 @@ y_test = test_data["labels"]          # shape (N,)
 print("Embeddings:", x_train.shape)
 print("Labels:", y_train.shape)
 
-
+# model structure
 model = Sequential([
     Dense(512, activation="relu", input_shape=(768,)),
-    Dropout(0.3),
+    Dropout(0.3), # dropout to avoid overfitting 
 
     Dense(256, activation="relu"),
     Dropout(0.3),
@@ -34,14 +37,16 @@ model = Sequential([
 ])
 
 
-
+# smoothing loss allows our model to avoid extremities in probability 
 smoothing_loss = tf.keras.losses.BinaryCrossentropy(label_smoothing=0.05)
 
+# adamW optimizer
 adamw = tf.keras.optimizers.AdamW(
             learning_rate=3e-4,
             weight_decay=3e-4 
         )
 
+# model compilation 
 model.compile(
     loss=smoothing_loss,
     optimizer=adamw,
@@ -59,7 +64,7 @@ callbacks = [
     ),
     tf.keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=4,
+        patience=10,
         restore_best_weights=True,
         verbose=1
     )
@@ -87,21 +92,20 @@ plt.ylabel("Loss")
 plt.title("Training vs Validation Loss")
 plt.show()
 
-# optional: evaluate on held-out test set
+# evaluate on held-out test set
 test_loss, test_acc = model.evaluate(x_test, y_test, verbose=1)
 print("Test loss:", test_loss)
 print("Test accuracy:", test_acc)
 
 # calibration curve
+# calibration curves:
+# numerical predicaiton and targets _> check model accuracy scores agaisnt diff decision thresholds
+# -> for diff sensitivities of the output 
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import brier_score_loss
 
 # predicted probabilities on test set
 y_prob = model.predict(x_test, verbose=0).ravel()  # shape (N_test,)
-
-# optional: Brier score (lower is better, 0 = perfect)
-brier = brier_score_loss(y_test, y_prob)
-print("Brier score:", brier)
 
 # compute calibration curve
 prob_true, prob_pred = calibration_curve(
@@ -110,7 +114,7 @@ prob_true, prob_pred = calibration_curve(
     strategy='quantile'  # each bin has ~same # of samples
 )
 
-# plot reliability diagram
+# plot reliability (calibration curve) diagram
 plt.figure()
 plt.plot(prob_pred, prob_true, marker="o", linewidth=1, label="Model")
 plt.plot([0, 1], [0, 1], linestyle="--", label="Perfectly calibrated")
@@ -121,10 +125,7 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-
-# -------------------------
-# THRESHOLD SEARCH
-# -------------------------
+# threshold search 
 from sklearn.metrics import f1_score
 
 best_thr = 0.5
@@ -140,4 +141,5 @@ for thr in np.linspace(0.1, 0.9, 17):  # 0.1 → 0.9 in steps of 0.05
 print("Best threshold:", best_thr)
 print("F1 at best threshold:", best_f1)
 
+# save model to be later loaded into app.py
 model.save("sarcasm_file_withcalib.h5")

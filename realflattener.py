@@ -59,6 +59,7 @@ with open(TRAIN_PATH, encoding="utf-8") as fin, \
         rows_written += 2
         lines_used += 1
 
+# debugging purposes 
 print("lines_total:", lines_total)
 print("lines_used:", lines_used)
 print("lines_skipped:", lines_skipped)

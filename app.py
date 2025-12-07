@@ -43,7 +43,7 @@ def preprocess_text(text: str) -> np.ndarray:
 def predict_sentence(text: str):
     x = preprocess_text(text)
     prob = float(clf_model.predict(x, verbose=0)[0][0])      # sigmoid output
-    label = "sarcastic" if prob >= 0.35 else "not sarcastic"
+    label = "sarcastic" if prob >= 0.4 else "not sarcastic"
     return label, prob
 
 
