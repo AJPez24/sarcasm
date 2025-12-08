@@ -6,6 +6,8 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from sklearn.preprocessing import StandardScaler
 
+#Chat GPT was used to look for and implement anti overfitting techniques
+
 # load embeddings
 train_data = np.load("./data/train_embeddings_mean.npz")  
 test_data = np.load("./data/test_embeddings_mean.npz")

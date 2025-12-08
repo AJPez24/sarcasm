@@ -9,6 +9,8 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 
+#Chat GPT was used to look for and implement anti overfitting techniques
+
 #load train and test csvs
 train_df = pd.read_csv("./data/responses_flat_train.csv")
 test_df = pd.read_csv("./data/responses_flat_test.csv")
