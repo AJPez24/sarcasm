@@ -336,7 +336,15 @@
             used labeled news article headline data with a similar structure to our project and reached 89% accuracy after 
             3 epochs.</p>
 
-        <p>(summary of results)</p>
+        <p>Our project utilizes a different data source and methods. By using Reddit threads as input text, we trained our 
+            model using informal conversations rather than more structured news headlines. Further, by pre-processing the 
+            data in multiple ways, we were able to evaluate how the structure, punctuation, and context impact sarcasm 
+            detection in short text.</p>
+
+        <p>Overall, our results show that the unedited replies performed the best, reaching a validation accuracy of 68% 
+            and F1 score of 71% at the optimized threshold. Adding the parent-comment context and stripping punctuation 
+            both reduced accuracy. While our model could not exceed 70% accuracy without overfitting, it did outperform the 
+            one-hot baseline significantly. Through fine-tuning BERT, we could further improve our results.</p>
 
         <h2>Sources</h2>
         
